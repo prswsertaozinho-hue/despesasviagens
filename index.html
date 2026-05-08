@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>SGSST - Relatório de Despesas de Viagem</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -69,44 +69,105 @@
         .dica { font-size: 11px; color: #718096; margin-top: 4px; }
         .mensagem-vazia { text-align: center; padding: 40px; color: #a0aec0; font-size: 16px; }
         .aviso-salvar { background: #c6f6d5; border-left: 4px solid #2c7a4d; padding: 12px; margin-bottom: 20px; border-radius: 8px; font-size: 13px; }
-        @media (max-width: 768px) { body { padding: 10px; } .form-despesa { grid-template-columns: 1fr; } .btn { width: 100%; justify-content: center; } }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .form-despesa { grid-template-columns: 1fr; }
+            .btn { width: 100%; justify-content: center; }
+            th, td { padding: 8px; font-size: 12px; }
+        }
         
-        /* Estilo para o relatório PDF - COM PROPORÇÃO CORRETA DAS FOTOS */
+        /* Estilo para o relatório PDF - VERSÃO CORRIGIDA PARA CELULAR */
         .pdf-report {
             font-family: 'Segoe UI', Arial, sans-serif;
+            width: 100%;
             max-width: 800px;
             margin: 0 auto;
             background: white;
-            padding: 30px;
+            padding: 20px;
+            box-sizing: border-box;
         }
-        .pdf-report h1 { color: #1a5f7a; border-bottom: 3px solid #1a5f7a; padding-bottom: 10px; margin-bottom: 20px; }
-        .pdf-report .info-section { background: #f7fafc; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-        .pdf-report .info-row { display: flex; margin-bottom: 8px; }
-        .pdf-report .info-label { width: 120px; font-weight: bold; color: #4a5568; }
-        .pdf-report table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        .pdf-report th { background: #1a5f7a; color: white; padding: 10px; text-align: left; }
-        .pdf-report td { border: 1px solid #e2e8f0; padding: 8px; }
-        .pdf-report .total-section { text-align: right; margin-top: 20px; padding-top: 10px; border-top: 2px solid #e2e8f0; }
-        .pdf-report .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #a0aec0; }
+        .pdf-report h1 { 
+            color: #1a5f7a; 
+            border-bottom: 3px solid #1a5f7a; 
+            padding-bottom: 10px; 
+            margin-bottom: 20px;
+            font-size: 18px;
+            text-align: center;
+        }
+        .pdf-report .info-section { 
+            background: #f7fafc; 
+            padding: 12px; 
+            border-radius: 10px; 
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+        .pdf-report .info-row { 
+            display: flex; 
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+        .pdf-report .info-label { 
+            width: 100px; 
+            font-weight: bold; 
+            color: #4a5568;
+            flex-shrink: 0;
+        }
+        .pdf-report .info-value {
+            flex: 1;
+            word-break: break-word;
+        }
+        .pdf-report h3 {
+            font-size: 14px;
+            margin: 15px 0 10px 0;
+        }
+        .pdf-report table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 15px 0; 
+            font-size: 10px;
+        }
+        .pdf-report th { 
+            background: #1a5f7a; 
+            color: white; 
+            padding: 8px; 
+            text-align: left; 
+        }
+        .pdf-report td { 
+            border: 1px solid #e2e8f0; 
+            padding: 6px; 
+        }
+        .pdf-report .total-section { 
+            text-align: right; 
+            margin-top: 15px; 
+            padding-top: 10px; 
+            border-top: 2px solid #e2e8f0;
+            font-size: 12px;
+        }
+        .pdf-report .footer { 
+            margin-top: 30px; 
+            text-align: center; 
+            font-size: 9px; 
+            color: #a0aec0; 
+        }
         .comprovantes-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
-            margin-top: 20px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-top: 15px;
+            margin-bottom: 15px;
             justify-content: flex-start;
         }
         .comprovante-item {
             text-align: center;
-            width: 160px;
+            width: 130px;
             border: 1px solid #ddd;
             border-radius: 8px;
-            padding: 10px;
+            padding: 8px;
             background: #f9f9f9;
         }
         .comprovante-item .img-container {
-            width: 140px;
-            height: 140px;
+            width: 110px;
+            height: 110px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -121,22 +182,21 @@
             width: auto;
             height: auto;
             object-fit: contain;
-            display: block;
         }
         .comprovante-item p {
-            font-size: 10px;
-            margin-top: 8px;
+            font-size: 9px;
+            margin-top: 6px;
             color: #666;
             word-break: break-word;
         }
         .comprovante-item .comprovante-data {
-            font-size: 9px;
+            font-size: 8px;
             color: #999;
         }
         .comprovante-item .comprovante-valor {
             font-weight: bold;
             color: #1a5f7a;
-            margin-top: 5px;
+            margin-top: 4px;
         }
     </style>
 </head>
@@ -152,7 +212,7 @@
         <div class="header">
             <h1>📋 SGSST - RELATÓRIO DE DESPESAS DE VIAGEM</h1>
             <div class="aviso-salvar">
-                ✅ <strong>PDF COM FOTOS EM PROPORÇÃO ORIGINAL</strong> - As imagens mantêm sua proporção sem distorção!
+                ✅ <strong>PDF CORRIGIDO PARA CELULAR</strong> - Agora o PDF se ajusta perfeitamente à tela!
             </div>
             <div class="info-grid">
                 <div class="info-item"><label>FUNCIONÁRIO *</label><input type="text" id="funcionario" placeholder="Digite o nome do funcionário"></div>
@@ -342,7 +402,7 @@
             const tbody = document.getElementById('listaDespesas');
             tbody.innerHTML = '';
             if (lista.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="mensagem-vazia">📭 Nenhuma despesa cadastrada.<br>Clique em "Adicionar Despesa" para começar.基线</td>';
+                tbody.innerHTML = '<tr><td colspan="6" class="mensagem-vazia">📭 Nenhuma despesa cadastrada.<br>Clique em "Adicionar Despesa" para começar.基线</tr>';
                 return;
             }
             lista.forEach((despesa, idx) => {
@@ -389,33 +449,14 @@
             return new Date(dataStr).toLocaleDateString('pt-BR');
         }
 
-        // Função para redimensionar imagem mantendo proporção
-        function redimensionarImagem(dataUrl, maxWidth, maxHeight, callback) {
-            const img = new Image();
-            img.onload = function() {
-                let width = img.width;
-                let height = img.height;
-                
-                if (width > maxWidth) {
-                    height = (height * maxWidth) / width;
-                    width = maxWidth;
-                }
-                if (height > maxHeight) {
-                    width = (width * maxHeight) / height;
-                    height = maxHeight;
-                }
-                
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                callback(canvas.toDataURL('image/jpeg', 0.8));
-            };
-            img.src = dataUrl;
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
-        // PDF COM FOTOS EM PROPORÇÃO ORIGINAL
+        // PDF CORRIGIDO - COM DIMENSIONAMENTO CORRETO PARA CELULAR
         async function gerarPDFComFotos() {
             const { jsPDF } = window.jspdf;
             
@@ -434,37 +475,36 @@
                 return;
             }
             
+            // Criar elemento para o relatório com largura fixa para evitar cortes
             const reportDiv = document.createElement('div');
             reportDiv.className = 'pdf-report';
+            reportDiv.style.width = '750px';
+            reportDiv.style.backgroundColor = 'white';
+            reportDiv.style.padding = '20px';
+            reportDiv.style.boxSizing = 'border-box';
             
             const adiantamento = parseFloat(document.getElementById('adiantamento').value) || 0;
             const total = despesas.reduce((sum, d) => sum + d.valor, 0);
             const diferenca = adiantamento - total;
             
-            // Montar HTML do relatório com fotos em proporção original
+            // Montar HTML do relatório
             let comprovantesHtml = '';
             const despesasComFoto = despesas.filter(d => d.foto);
             
             if (despesasComFoto.length > 0) {
-                // Criar divs para cada comprovante
-                const comprovantesDivs = [];
-                for (const d of despesasComFoto) {
-                    // Criar uma div para cada comprovante (as imagens serão processadas depois)
-                    comprovantesDivs.push(`
-                        <div class="comprovante-item" data-foto="${d.foto}" data-desc="${d.discriminacao}" data-data="${formatarData(d.data)}" data-nf="${d.nf}" data-valor="${d.valor}">
-                            <div class="img-container">
-                                <img src="${d.foto}" alt="Comprovante" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;" onerror="this.style.display='none'">
-                            </div>
-                            <p><strong>${escapeHtml(d.discriminacao)}</strong></p>
-                            <p class="comprovante-data">Data: ${formatarData(d.data)} | NF: ${d.nf}</p>
-                            <p class="comprovante-valor">R$ ${d.valor.toFixed(2)}</p>
-                        </div>
-                    `);
-                }
                 comprovantesHtml = `
                     <h3>📸 COMPROVANTES ANEXADOS</h3>
                     <div class="comprovantes-grid">
-                        ${comprovantesDivs.join('')}
+                        ${despesasComFoto.map(d => `
+                            <div class="comprovante-item">
+                                <div class="img-container">
+                                    <img src="${d.foto}" alt="Comprovante" style="max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;">
+                                </div>
+                                <p><strong>${escapeHtml(d.discriminacao)}</strong></p>
+                                <p class="comprovante-data">Data: ${formatarData(d.data)} | NF: ${d.nf}</p>
+                                <p class="comprovante-valor">R$ ${d.valor.toFixed(2)}</p>
+                            </div>
+                        `).join('')}
                     </div>
                 `;
             } else {
@@ -474,12 +514,12 @@
             reportDiv.innerHTML = `
                 <h1>SGSST - RELATÓRIO DE DESPESAS DE VIAGEM</h1>
                 <div class="info-section">
-                    <div class="info-row"><span class="info-label">Código:</span><span>SGSST-FIN-FR02_00</span></div>
-                    <div class="info-row"><span class="info-label">Funcionário:</span><span>${escapeHtml(funcionario)}</span></div>
-                    <div class="info-row"><span class="info-label">Departamento:</span><span>${escapeHtml(departamento || '-')}</span></div>
-                    <div class="info-row"><span class="info-label">Destino:</span><span>${escapeHtml(destino || '-')}</span></div>
-                    <div class="info-row"><span class="info-label">Data da Viagem:</span><span>${dataViagem ? formatarData(dataViagem) : '-'}</span></div>
-                    <div class="info-row"><span class="info-label">Data do Relatório:</span><span>${new Date().toLocaleDateString('pt-BR')}</span></div>
+                    <div class="info-row"><span class="info-label">Código:</span><span class="info-value">SGSST-FIN-FR02_00</span></div>
+                    <div class="info-row"><span class="info-label">Funcionário:</span><span class="info-value">${escapeHtml(funcionario)}</span></div>
+                    <div class="info-row"><span class="info-label">Departamento:</span><span class="info-value">${escapeHtml(departamento || '-')}</span></div>
+                    <div class="info-row"><span class="info-label">Destino:</span><span class="info-value">${escapeHtml(destino || '-')}</span></div>
+                    <div class="info-row"><span class="info-label">Data da Viagem:</span><span class="info-value">${dataViagem ? formatarData(dataViagem) : '-'}</span></div>
+                    <div class="info-row"><span class="info-label">Data do Relatório:</span><span class="info-value">${new Date().toLocaleDateString('pt-BR')}</span></div>
                 </div>
                 
                 <h3>📋 LISTA DE DESPESAS</h3>
@@ -515,37 +555,57 @@
             document.body.appendChild(reportDiv);
             
             try {
-                // Aguardar um pouco para as imagens carregarem
-                await new Promise(resolve => setTimeout(resolve, 500));
+                // Aguardar imagens carregarem
+                const images = reportDiv.querySelectorAll('img');
+                await Promise.all(Array.from(images).map(img => {
+                    if (img.complete) return Promise.resolve();
+                    return new Promise(resolve => {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    });
+                }));
                 
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
+                // Criar PDF com dimensões corretas
                 const canvas = await html2canvas(reportDiv, { 
-                    scale: 2, 
+                    scale: 2.5,
                     backgroundColor: '#ffffff',
                     logging: false,
                     useCORS: true,
                     allowTaint: false,
-                    onclone: (clonedDoc, element) => {
-                        // Garantir que as imagens no clone mantenham a proporção
-                        const imgs = clonedDoc.querySelectorAll('img');
-                        imgs.forEach(img => {
-                            img.style.maxWidth = '100%';
-                            img.style.maxHeight = '100%';
-                            img.style.width = 'auto';
-                            img.style.height = 'auto';
-                            img.style.objectFit = 'contain';
-                        });
-                    }
+                    windowWidth: 750,
+                    windowHeight: reportDiv.scrollHeight
                 });
                 
                 const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const imgWidth = 210;
+                const pdf = new jsPDF({
+                    unit: 'mm',
+                    format: 'a4',
+                    orientation: 'portrait'
+                });
+                
+                const imgWidth = 190; // Largura em mm (menor que A4 para dar margem)
+                const pageHeight = 277; // Altura A4 em mm
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let position = 0;
                 
-                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-                pdf.save(`Relatorio_${funcionario.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+                // Adicionar primeira página
+                pdf.addImage(imgData, 'PNG', 10, position + 10, imgWidth, imgHeight);
                 
-                alert(`✅ PDF gerado com sucesso!\n\n📄 Relatório de ${funcionario}\n📸 ${despesasComFoto.length} comprovante(s) anexado(s)\n🖼️ Imagens mantiveram proporção original`);
+                // Se o conteúdo for maior que uma página, adicionar mais páginas
+                let heightLeft = imgHeight - pageHeight + 20;
+                while (heightLeft > 0) {
+                    position = position - pageHeight + 20;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 10, position + 10, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                const nomeArquivo = `Relatorio_${funcionario.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+                pdf.save(nomeArquivo);
+                
+                alert(`✅ PDF gerado com sucesso!\n\n📄 Relatório de ${funcionario}\n📸 ${despesasComFoto.length} comprovante(s) anexado(s)`);
             } catch (error) {
                 console.error('Erro ao gerar PDF:', error);
                 alert('Erro ao gerar PDF. Tente novamente.');
@@ -554,15 +614,7 @@
             document.body.removeChild(reportDiv);
         }
 
-        // Função auxiliar para escapar HTML
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // EXPORTAÇÃO EXCEL CONFORME O LAYOUT MODIFICADO
+        // EXPORTAÇÃO EXCEL
         async function exportarExcelModificado() {
             const funcionario = document.getElementById('funcionario').value || "";
             const departamento = document.getElementById('departamento').value || "";
@@ -587,39 +639,32 @@
                 worksheet.getColumn(colunas[i]).width = width;
             }
             
-            // LINHA 1
             worksheet.mergeCells('A1:G1');
             worksheet.getCell('A1').value = 'RELATÓRIO DESPESAS DE VIAGEM';
             worksheet.getCell('A1').font = { bold: true, size: 14 };
             worksheet.getCell('A1').alignment = { horizontal: 'center' };
             
-            // LINHA 2
             worksheet.getCell('A2').value = 'CÓDIGO SGSST-FIN-FR02_00';
             worksheet.getCell('C2').value = 'Data';
             worksheet.getCell('E2').value = dataViagem;
             worksheet.getCell('A2').font = { bold: true };
             
-            // LINHA 3
             worksheet.getCell('A3').value = 'Funcionário:';
             worksheet.getCell('B3').value = funcionario;
             worksheet.getCell('C3').value = dataViagem;
             
-            // LINHA 4
             worksheet.getCell('A4').value = 'Departamento:';
             worksheet.getCell('B4').value = departamento;
             worksheet.getCell('C4').value = 'DESTINO';
             worksheet.getCell('D4').value = destino;
             
-            // LINHA 5
             worksheet.getCell('A5').value = 'Condução Própria';
             worksheet.getCell('C5').value = 'Condução da Empresa';
             worksheet.getCell('F5').value = 'Outros';
             
-            // LINHA 6
             worksheet.getCell('A6').value = 'Km. Inicial:';
             worksheet.getCell('C6').value = 'Km. Final:';
             
-            // LINHA 8 - Cabeçalho
             worksheet.getCell('A8').value = 'Data';
             worksheet.getCell('B8').value = 'NF nº';
             worksheet.getCell('C8').value = 'Discriminação';
@@ -629,7 +674,6 @@
                 worksheet.getCell(cell).font = { bold: true };
             });
             
-            // Dados
             for (let i = 0; i < despesas.length; i++) {
                 const linha = 9 + i;
                 const d = despesas[i];
@@ -726,7 +770,7 @@
             atualizarTabela();
             atualizarResumo();
             
-            alert('✅ Exemplo carregado! Duas despesas têm comprovantes para você testar o PDF com fotos em proporção original.');
+            alert('✅ Exemplo carregado!');
         }
 
         function backupDados() {
