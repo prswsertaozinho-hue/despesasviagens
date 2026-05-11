@@ -222,7 +222,7 @@
             <div class="aviso-salvar">
                 ✅ <strong>COMPRESSÃO DE IMAGENS ATIVADA</strong> - Fotos são redimensionadas para ~100KB (economiza 95% de espaço!)
             </div>
-            <div class="compress-info">
+            <div class="compress-info" id="compressInfo">
                 📸 <strong>Como funciona:</strong> Fotos são automaticamente redimensionadas para 800px de largura e comprimidas para ~100KB.
                 Isso mantém a qualidade para o PDF e economiza espaço no seu dispositivo!
             </div>
@@ -246,7 +246,7 @@
                     <label>COMPROVANTE (FOTO)</label>
                     <div class="foto-area" onclick="document.getElementById('fotoInput').click()">
                         📸 Clique para tirar foto ou enviar
-                        <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none" onchange="previewFoto(this)">
+                        <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none" onchange="comprimirEAnexarFoto(this)">
                         <img id="fotoPreview" class="foto-preview" style="display:none">
                     </div>
                 </div>
@@ -290,7 +290,7 @@
         let chart = null;
         let editandoIndex = null;
 
-        // FUNÇÃO DE COMPRESSÃO DE IMAGEM
+        // FUNÇÃO DE COMPRESSÃO DE IMAGEM - CORRIGIDA
         function comprimirImagem(dataUrl, maxWidth = 800, qualidade = 0.7) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
@@ -317,42 +317,61 @@
                     // Calcular tamanho aproximado
                     const tamanhoOriginal = Math.round(dataUrl.length * 0.75 / 1024);
                     const tamanhoComprimido = Math.round(imagemComprimida.length * 0.75 / 1024);
+                    const economia = Math.round((1 - tamanhoComprimido/tamanhoOriginal) * 100);
                     
-                    console.log(`📸 Compressão: ${tamanhoOriginal}KB -> ${tamanhoComprimido}KB (${Math.round((1 - tamanhoComprimido/tamanhoOriginal)*100)}% menor)`);
+                    // Mostrar informação de compressão
+                    const compressInfo = document.getElementById('compressInfo');
+                    if (compressInfo) {
+                        compressInfo.innerHTML = `📸 <strong>Compressão aplicada!</strong> Foto reduzida de ${tamanhoOriginal}KB para ${tamanhoComprimido}KB (${economia}% menor)`;
+                        setTimeout(() => {
+                            compressInfo.innerHTML = `📸 <strong>Como funciona:</strong> Fotos são automaticamente redimensionadas para 800px de largura e comprimidas para ~100KB.`;
+                        }, 4000);
+                    }
+                    
+                    console.log(`📸 Compressão: ${tamanhoOriginal}KB -> ${tamanhoComprimido}KB (${economia}% menor)`);
                     
                     resolve(imagemComprimida);
                 };
-                img.onerror = reject;
+                img.onerror = () => reject(new Error('Erro ao carregar imagem'));
                 img.src = dataUrl;
             });
         }
 
-        async function previewFoto(input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                const reader = new FileReader();
+        // Função para comprimir e anexar foto
+        async function comprimirEAnexarFoto(input) {
+            if (!input.files || !input.files[0]) return;
+            
+            const file = input.files[0];
+            const reader = new FileReader();
+            
+            // Mostrar loading
+            const preview = document.getElementById('fotoPreview');
+            preview.style.display = 'block';
+            preview.style.opacity = '0.5';
+            preview.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Crect width="100" height="100" fill="%23eee"/%3E%3Ctext x="50" y="55" text-anchor="middle" fill="%23999" font-size="12"%3EProcessando...%3C/text%3E%3C/svg%3E';
+            
+            reader.onload = async function(e) {
+                const imagemOriginal = e.target.result;
                 
-                reader.onload = async function(e) {
-                    const imagemOriginal = e.target.result;
-                    // Mostrar preview
-                    document.getElementById('fotoPreview').src = imagemOriginal;
-                    document.getElementById('fotoPreview').style.display = 'block';
+                try {
+                    // Comprimir imagem
+                    const imagemComprimida = await comprimirImagem(imagemOriginal, 800, 0.7);
+                    fotoTemp = imagemComprimida;
                     
-                    // Comprimir imagem em background
-                    try {
-                        const imagemComprimida = await comprimirImagem(imagemOriginal, 800, 0.7);
-                        fotoTemp = imagemComprimida;
-                        
-                        // Atualizar preview com a versão comprimida (opcional)
-                        document.getElementById('fotoPreview').src = imagemComprimida;
-                    } catch (error) {
-                        console.error('Erro ao comprimir imagem:', error);
-                        // Se falhar, usa a original
-                        fotoTemp = imagemOriginal;
-                    }
-                };
-                reader.readAsDataURL(file);
-            }
+                    // Mostrar preview da imagem comprimida
+                    preview.src = imagemComprimida;
+                    preview.style.opacity = '1';
+                    
+                } catch (error) {
+                    console.error('Erro ao comprimir imagem:', error);
+                    // Se falhar, usa a original
+                    fotoTemp = imagemOriginal;
+                    preview.src = imagemOriginal;
+                    preview.style.opacity = '1';
+                    alert('Erro ao comprimir imagem, usando imagem original.');
+                }
+            };
+            reader.readAsDataURL(file);
         }
 
         function carregarDados() {
@@ -403,7 +422,14 @@
                 return;
             }
 
-            const novaDespesa = { data, nf, discriminacao, valor, foto: fotoTemp };
+            const novaDespesa = { 
+                data, 
+                nf, 
+                discriminacao, 
+                valor, 
+                foto: fotoTemp  // fotoTemp já está comprimida!
+            };
+            
             if (editandoIndex !== null) {
                 despesas[editandoIndex] = novaDespesa;
                 editandoIndex = null;
@@ -415,6 +441,18 @@
             salvarDados();
             atualizarTabela();
             atualizarResumo();
+            
+            // Mostrar mensagem de confirmação com tamanho da foto
+            if (fotoTemp) {
+                const tamanhoKB = Math.round(fotoTemp.length * 0.75 / 1024);
+                const infoDiv = document.getElementById('compressInfo');
+                if (infoDiv) {
+                    infoDiv.innerHTML = `✅ Despesa adicionada! Foto comprimida para ${tamanhoKB}KB.`;
+                    setTimeout(() => {
+                        infoDiv.innerHTML = `📸 <strong>Como funciona:</strong> Fotos são automaticamente redimensionadas para 800px de largura e comprimidas para ~100KB.`;
+                    }, 3000);
+                }
+            }
         }
 
         function limparFormulario() {
@@ -467,7 +505,7 @@
             const tbody = document.getElementById('listaDespesas');
             tbody.innerHTML = '';
             if (lista.length === 0) {
-                tbody.innerHTML = '</tr><td colspan="6" class="mensagem-vazia">📭 Nenhuma despesa cadastrada.<br>Clique em "Adicionar Despesa" para começar.基线</tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="mensagem-vazia">📭 Nenhuma despesa cadastrada.<br>Clique em "Adicionar Despesa" para começar.基线<tr>';
                 return;
             }
             lista.forEach((despesa, idx) => {
