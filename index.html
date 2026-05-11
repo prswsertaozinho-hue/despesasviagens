@@ -32,9 +32,24 @@
         .form-group label { font-size: 12px; color: #4a5568; font-weight: 600; margin-bottom: 5px; }
         .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; }
         .form-group textarea { resize: vertical; min-height: 60px; }
-        .foto-area { border: 2px dashed #e2e8f0; border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.3s; }
+        .foto-area { 
+            border: 2px dashed #e2e8f0; 
+            border-radius: 8px; 
+            padding: 15px; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.3s;
+            background: #fafafa;
+        }
         .foto-area:hover { border-color: #1a5f7a; background: #f7fafc; }
-        .foto-preview { max-width: 100%; max-height: 150px; margin-top: 10px; border-radius: 8px; object-fit: contain; }
+        .foto-preview { 
+            max-width: 100%; 
+            max-height: 150px; 
+            margin-top: 10px; 
+            border-radius: 8px; 
+            object-fit: contain;
+            border: 1px solid #ddd;
+        }
         .btn { background: #1a5f7a; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
         .btn:hover { background: #0d3b4f; transform: translateY(-2px); }
         .btn-danger { background: #e53e3e; }
@@ -80,6 +95,26 @@
         }
         .processando { background: #fff7e6; border-left-color: #faad14; color: #ad6800; }
         .sucesso { background: #f6ffed; border-left-color: #52c41a; color: #237804; }
+        .botoes-foto {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-foto {
+            flex: 1;
+            background: #e2e8f0;
+            color: #2d3748;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        .btn-foto:hover { background: #cbd5e0; }
+        .btn-foto-camera { background: #1a5f7a; color: white; }
+        .btn-foto-camera:hover { background: #0d3b4f; }
         @media (max-width: 768px) {
             body { padding: 10px; }
             .form-despesa { grid-template-columns: 1fr; }
@@ -103,7 +138,7 @@
                 ✅ <strong>PDF COM IMAGENS</strong> - As fotos dos comprovantes aparecem no PDF!
             </div>
             <div class="compress-info" id="compressInfo">
-                📸 Clique na área da foto para tirar ou selecionar uma imagem
+                📸 Clique nos botões abaixo para tirar foto ou selecionar da galeria
             </div>
             <div class="info-grid">
                 <div class="info-item"><label>FUNCIONÁRIO *</label><input type="text" id="funcionario" placeholder="Digite o nome do funcionário"></div>
@@ -124,8 +159,13 @@
                 <div class="form-group">
                     <label>COMPROVANTE (FOTO)</label>
                     <div class="foto-area" id="fotoArea">
-                        📸 Clique para tirar foto ou enviar
+                        <div>📸 Área da foto</div>
+                        <div class="botoes-foto">
+                            <div class="btn-foto btn-foto-camera" onclick="abrirCamera()">📷 Tirar Foto</div>
+                            <div class="btn-foto" onclick="abrirGaleria()">🖼️ Escolher da Galeria</div>
+                        </div>
                         <input type="file" id="fotoInput" accept="image/*" style="display:none">
+                        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
                         <img id="fotoPreview" class="foto-preview" style="display:none">
                     </div>
                     <div id="progressoFoto" style="font-size: 11px; color: #666; margin-top: 5px;"></div>
@@ -231,12 +271,19 @@
             });
         }
 
-        document.getElementById('fotoArea').onclick = function() {
-            document.getElementById('fotoInput').click();
-        };
+        function abrirCamera() {
+            const input = document.getElementById('cameraInput');
+            input.value = '';
+            input.click();
+        }
 
-        document.getElementById('fotoInput').addEventListener('change', async function(e) {
-            const file = e.target.files[0];
+        function abrirGaleria() {
+            const input = document.getElementById('fotoInput');
+            input.value = '';
+            input.click();
+        }
+
+        async function processarArquivo(file) {
             if (!file) return;
             
             if (!file.type.startsWith('image/')) {
@@ -273,17 +320,27 @@
                 preview.style.display = 'none';
                 fotoTemp = null;
             }
+        }
+
+        document.getElementById('cameraInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (file) await processarArquivo(file);
+        });
+
+        document.getElementById('fotoInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (file) await processarArquivo(file);
         });
 
         function carregarDados() {
-            const salvo = localStorage.getItem('despesas_viagem_sgsst_v6');
+            const salvo = localStorage.getItem('despesas_viagem_sgsst_v7');
             if (salvo) {
                 despesas = JSON.parse(salvo);
             } else {
                 despesas = [];
             }
             
-            const dadosUsuario = localStorage.getItem('dados_usuario_sgsst_v6');
+            const dadosUsuario = localStorage.getItem('dados_usuario_sgsst_v7');
             if (dadosUsuario) {
                 const user = JSON.parse(dadosUsuario);
                 if (user.funcionario) document.getElementById('funcionario').value = user.funcionario;
@@ -304,11 +361,11 @@
                 dataViagem: document.getElementById('dataViagem').value,
                 adiantamento: document.getElementById('adiantamento').value
             };
-            localStorage.setItem('dados_usuario_sgsst_v6', JSON.stringify(dadosUsuario));
+            localStorage.setItem('dados_usuario_sgsst_v7', JSON.stringify(dadosUsuario));
         }
 
         function salvarDados() {
-            localStorage.setItem('despesas_viagem_sgsst_v6', JSON.stringify(despesas));
+            localStorage.setItem('despesas_viagem_sgsst_v7', JSON.stringify(despesas));
         }
 
         function adicionarDespesa() {
@@ -343,6 +400,7 @@
             document.getElementById('valorDespesa').value = '';
             document.getElementById('fotoPreview').style.display = 'none';
             document.getElementById('fotoInput').value = '';
+            document.getElementById('cameraInput').value = '';
             fotoTemp = null;
         }
 
@@ -386,7 +444,7 @@
             const tbody = document.getElementById('listaDespesas');
             tbody.innerHTML = '';
             if (lista.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="mensagem-vazia">📭 Nenhuma despesa cadastrada.<br>Clique em "Adicionar Despesa" para começar.基线<tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="mensagem-vazia">📭 Nenhuma despesa cadastrada.<br>Clique em "Adicionar Despesa" para começar.基线</tr>';
                 return;
             }
             lista.forEach((despesa, idx) => {
@@ -439,7 +497,6 @@
             return div.innerHTML;
         }
 
-        // PDF COM IMAGENS - SOLUÇÃO CORRIGIDA
         async function gerarPDFComImagens() {
             const { jsPDF } = window.jspdf;
             
@@ -458,7 +515,6 @@
                 return;
             }
             
-            // Criar elemento temporário para renderizar com html2canvas (inclui imagens)
             const reportDiv = document.createElement('div');
             reportDiv.style.width = '750px';
             reportDiv.style.backgroundColor = 'white';
@@ -469,7 +525,6 @@
             const total = despesas.reduce((sum, d) => sum + d.valor, 0);
             const diferenca = adiantamento - total;
             
-            // Montar HTML com imagens em tamanho reduzido
             let comprovantesHtml = '';
             const despesasComFoto = despesas.filter(d => d.foto);
             
@@ -545,7 +600,6 @@
             document.body.appendChild(reportDiv);
             
             try {
-                // Aguardar imagens carregarem
                 const images = reportDiv.querySelectorAll('img');
                 await Promise.all(Array.from(images).map(img => {
                     if (img.complete) return Promise.resolve();
@@ -554,7 +608,6 @@
                 
                 await new Promise(resolve => setTimeout(resolve, 500));
                 
-                // Capturar com html2canvas em escala menor para reduzir tamanho
                 const canvas = await html2canvas(reportDiv, { 
                     scale: 1.5,
                     backgroundColor: '#ffffff',
@@ -563,7 +616,7 @@
                     allowTaint: false
                 });
                 
-                const imgData = canvas.toDataURL('image/jpeg', 0.7); // JPEG com compressão
+                const imgData = canvas.toDataURL('image/jpeg', 0.7);
                 const pdf = new jsPDF({
                     unit: 'mm',
                     format: 'a4',
