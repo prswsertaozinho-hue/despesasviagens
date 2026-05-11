@@ -86,34 +86,6 @@
             .btn { width: 100%; justify-content: center; }
             th, td { padding: 8px; font-size: 12px; }
         }
-        
-        .pdf-report {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .pdf-report h1 { color: #1a5f7a; border-bottom: 3px solid #1a5f7a; padding-bottom: 10px; margin-bottom: 20px; font-size: 18px; text-align: center; }
-        .pdf-report .info-section { background: #f7fafc; padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 12px; }
-        .pdf-report .info-row { display: flex; margin-bottom: 6px; flex-wrap: wrap; }
-        .pdf-report .info-label { width: 100px; font-weight: bold; color: #4a5568; flex-shrink: 0; }
-        .pdf-report .info-value { flex: 1; word-break: break-word; }
-        .pdf-report h3 { font-size: 14px; margin: 15px 0 10px 0; }
-        .pdf-report table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 10px; }
-        .pdf-report th { background: #1a5f7a; color: white; padding: 8px; text-align: left; }
-        .pdf-report td { border: 1px solid #e2e8f0; padding: 6px; }
-        .pdf-report .total-section { text-align: right; margin-top: 15px; padding-top: 10px; border-top: 2px solid #e2e8f0; font-size: 12px; }
-        .pdf-report .footer { margin-top: 30px; text-align: center; font-size: 9px; color: #a0aec0; }
-        .comprovantes-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; margin-bottom: 15px; justify-content: flex-start; }
-        .comprovante-item { text-align: center; width: 130px; border: 1px solid #ddd; border-radius: 8px; padding: 8px; background: #f9f9f9; }
-        .comprovante-item .img-container { width: 110px; height: 110px; display: flex; align-items: center; justify-content: center; margin: 0 auto; overflow: hidden; border-radius: 5px; background: #eee; }
-        .comprovante-item img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
-        .comprovante-item p { font-size: 9px; margin-top: 6px; color: #666; word-break: break-word; }
-        .comprovante-item .comprovante-data { font-size: 8px; color: #999; }
-        .comprovante-item .comprovante-valor { font-weight: bold; color: #1a5f7a; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -128,7 +100,7 @@
         <div class="header">
             <h1>📋 SGSST - RELATÓRIO DE DESPESAS DE VIAGEM</h1>
             <div class="aviso-salvar">
-                ✅ <strong>PDF OTIMIZADO</strong> - Comprimido para tamanho reduzido sem perda de qualidade
+                ✅ <strong>PDF COM IMAGENS</strong> - As fotos dos comprovantes aparecem no PDF!
             </div>
             <div class="compress-info" id="compressInfo">
                 📸 Clique na área da foto para tirar ou selecionar uma imagem
@@ -181,7 +153,7 @@
             </div>
 
             <div class="acoes">
-                <button class="btn" onclick="gerarPDFOtimizado()">📄 Exportar PDF Otimizado</button>
+                <button class="btn" onclick="gerarPDFComImagens()">📄 Exportar PDF (com fotos)</button>
                 <button class="btn btn-success" onclick="exportarExcelModificado()">📊 Exportar Excel</button>
                 <button class="btn btn-danger" onclick="limparTudo()">🗑️ Limpar Tudo</button>
                 <button class="btn" onclick="carregarExemplo()">📋 Ver Exemplo</button>
@@ -216,7 +188,7 @@
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 
-                reader.onload = async function(e) {
+                reader.onload = function(e) {
                     const img = new Image();
                     
                     img.onload = function() {
@@ -238,11 +210,11 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        let melhorDataUrl = canvas.toDataURL('image/jpeg', 0.7);
-                        let tamanho = calcularTamanhoBase64(melhorDataUrl);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        const tamanho = calcularTamanhoBase64(dataUrl);
                         
                         resolve({
-                            dataUrl: melhorDataUrl,
+                            dataUrl: dataUrl,
                             tamanhoOriginal: file.size,
                             tamanhoComprimido: tamanho,
                             width: width,
@@ -304,14 +276,14 @@
         });
 
         function carregarDados() {
-            const salvo = localStorage.getItem('despesas_viagem_sgsst_v5');
+            const salvo = localStorage.getItem('despesas_viagem_sgsst_v6');
             if (salvo) {
                 despesas = JSON.parse(salvo);
             } else {
                 despesas = [];
             }
             
-            const dadosUsuario = localStorage.getItem('dados_usuario_sgsst_v5');
+            const dadosUsuario = localStorage.getItem('dados_usuario_sgsst_v6');
             if (dadosUsuario) {
                 const user = JSON.parse(dadosUsuario);
                 if (user.funcionario) document.getElementById('funcionario').value = user.funcionario;
@@ -332,11 +304,11 @@
                 dataViagem: document.getElementById('dataViagem').value,
                 adiantamento: document.getElementById('adiantamento').value
             };
-            localStorage.setItem('dados_usuario_sgsst_v5', JSON.stringify(dadosUsuario));
+            localStorage.setItem('dados_usuario_sgsst_v6', JSON.stringify(dadosUsuario));
         }
 
         function salvarDados() {
-            localStorage.setItem('despesas_viagem_sgsst_v5', JSON.stringify(despesas));
+            localStorage.setItem('despesas_viagem_sgsst_v6', JSON.stringify(despesas));
         }
 
         function adicionarDespesa() {
@@ -414,7 +386,7 @@
             const tbody = document.getElementById('listaDespesas');
             tbody.innerHTML = '';
             if (lista.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="mensagem-vazia">📭 Nenhuma despesa cadastrada.<br>Clique em "Adicionar Despesa" para começar.基线</tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="mensagem-vazia">📭 Nenhuma despesa cadastrada.<br>Clique em "Adicionar Despesa" para começar.基线<tr>';
                 return;
             }
             lista.forEach((despesa, idx) => {
@@ -467,8 +439,8 @@
             return div.innerHTML;
         }
 
-        // PDF OTIMIZADO - COM COMPRESSÃO DE IMAGEM
-        async function gerarPDFOtimizado() {
+        // PDF COM IMAGENS - SOLUÇÃO CORRIGIDA
+        async function gerarPDFComImagens() {
             const { jsPDF } = window.jspdf;
             
             const funcionario = document.getElementById('funcionario').value;
@@ -486,141 +458,144 @@
                 return;
             }
             
-            // Criar uma versão compacta do relatório para o PDF
-            const pdf = new jsPDF({
-                unit: 'mm',
-                format: 'a4',
-                orientation: 'portrait',
-                compress: true  // Ativar compressão do PDF
-            });
+            // Criar elemento temporário para renderizar com html2canvas (inclui imagens)
+            const reportDiv = document.createElement('div');
+            reportDiv.style.width = '750px';
+            reportDiv.style.backgroundColor = 'white';
+            reportDiv.style.padding = '30px';
+            reportDiv.style.fontFamily = 'Arial, sans-serif';
             
-            // Configurações da página
-            const pageWidth = 210;
-            const pageHeight = 297;
-            const margin = 15;
-            const contentWidth = pageWidth - (margin * 2);
-            let yPos = margin;
-            
-            // Função para adicionar texto com quebra de linha
-            function addText(text, x, y, size = 10, style = 'normal') {
-                pdf.setFontSize(size);
-                pdf.setFont('helvetica', style);
-                pdf.text(text, x, y);
-            }
-            
-            // Título
-            pdf.setFontSize(16);
-            pdf.setFont('helvetica', 'bold');
-            pdf.text('SGSST - RELATÓRIO DE DESPESAS DE VIAGEM', pageWidth / 2, yPos, { align: 'center' });
-            yPos += 10;
-            
-            // Linha separadora
-            pdf.line(margin, yPos, pageWidth - margin, yPos);
-            yPos += 8;
-            
-            // Informações da viagem
-            pdf.setFontSize(10);
-            pdf.setFont('helvetica', 'normal');
-            addText(`Código: SGSST-FIN-FR02_00`, margin, yPos);
-            yPos += 6;
-            addText(`Funcionário: ${funcionario}`, margin, yPos);
-            yPos += 6;
-            addText(`Departamento: ${departamento || '-'}`, margin, yPos);
-            yPos += 6;
-            addText(`Destino: ${destino || '-'}`, margin, yPos);
-            yPos += 6;
-            addText(`Data da Viagem: ${dataViagem ? formatarData(dataViagem) : '-'}`, margin, yPos);
-            yPos += 6;
-            addText(`Data do Relatório: ${new Date().toLocaleDateString('pt-BR')}`, margin, yPos);
-            yPos += 12;
-            
-            // Tabela de despesas
-            pdf.setFontSize(11);
-            pdf.setFont('helvetica', 'bold');
-            pdf.text('LISTA DE DESPESAS', margin, yPos);
-            yPos += 6;
-            
-            // Cabeçalho da tabela
-            pdf.setFillColor(26, 95, 122);
-            pdf.rect(margin, yPos, contentWidth, 7, 'F');
-            pdf.setTextColor(255, 255, 255);
-            pdf.setFontSize(8);
-            pdf.text('Data', margin + 2, yPos + 5);
-            pdf.text('NF', margin + 30, yPos + 5);
-            pdf.text('Discriminação', margin + 50, yPos + 5);
-            pdf.text('Valor', margin + 130, yPos + 5);
-            yPos += 7;
-            
-            // Linhas da tabela
-            pdf.setTextColor(0, 0, 0);
-            pdf.setFont('helvetica', 'normal');
-            for (const d of despesas) {
-                if (yPos > pageHeight - 40) {
-                    pdf.addPage();
-                    yPos = margin;
-                }
-                pdf.setFontSize(8);
-                pdf.text(formatarData(d.data), margin + 2, yPos + 4);
-                pdf.text(d.nf.toString(), margin + 30, yPos + 4);
-                let desc = d.discriminacao;
-                if (desc.length > 35) desc = desc.substring(0, 32) + '...';
-                pdf.text(desc, margin + 50, yPos + 4);
-                pdf.text(`R$ ${d.valor.toFixed(2)}`, margin + 130, yPos + 4);
-                yPos += 5;
-            }
-            yPos += 8;
-            
-            // Totais
-            const total = despesas.reduce((sum, d) => sum + d.valor, 0);
             const adiantamento = parseFloat(document.getElementById('adiantamento').value) || 0;
+            const total = despesas.reduce((sum, d) => sum + d.valor, 0);
             const diferenca = adiantamento - total;
             
-            pdf.setFontSize(10);
-            pdf.setFont('helvetica', 'bold');
-            addText(`TOTAL DOS GASTOS: R$ ${total.toFixed(2)}`, pageWidth - margin - 80, yPos);
-            yPos += 6;
-            addText(`VALOR RECEBIDO COMO ADIANTAMENTO: R$ ${adiantamento.toFixed(2)}`, pageWidth - margin - 80, yPos);
-            yPos += 6;
-            addText(`${diferenca >= 0 ? 'VALOR A RESTITUIR' : 'VALOR A RECEBER'}: R$ ${Math.abs(diferenca).toFixed(2)}`, pageWidth - margin - 80, yPos);
-            yPos += 15;
-            
-            // COMPROVANTES (se houver)
+            // Montar HTML com imagens em tamanho reduzido
+            let comprovantesHtml = '';
             const despesasComFoto = despesas.filter(d => d.foto);
+            
             if (despesasComFoto.length > 0) {
-                pdf.setFontSize(11);
-                pdf.setFont('helvetica', 'bold');
-                pdf.text(`📸 COMPROVANTES ANEXADOS (${despesasComFoto.length})`, margin, yPos);
-                yPos += 8;
-                
-                for (const d of despesasComFoto) {
-                    if (yPos > pageHeight - 50) {
-                        pdf.addPage();
-                        yPos = margin;
-                    }
-                    
-                    pdf.setFontSize(9);
-                    pdf.setFont('helvetica', 'bold');
-                    pdf.text(d.discriminacao, margin, yPos);
-                    yPos += 4;
-                    pdf.setFont('helvetica', 'normal');
-                    pdf.setFontSize(8);
-                    pdf.text(`Data: ${formatarData(d.data)} | NF: ${d.nf} | Valor: R$ ${d.valor.toFixed(2)}`, margin, yPos);
-                    yPos += 6;
-                }
+                comprovantesHtml = `
+                    <div style="margin-top: 20px;">
+                        <h3 style="color: #1a5f7a;">📸 COMPROVANTES ANEXADOS</h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                            ${despesasComFoto.map(d => `
+                                <div style="text-align: center; width: 150px; border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
+                                    <img src="${d.foto}" style="width: 120px; height: 120px; object-fit: contain; border-radius: 5px;">
+                                    <p style="font-size: 11px; margin-top: 8px;"><strong>${escapeHtml(d.discriminacao)}</strong></p>
+                                    <p style="font-size: 10px; color: #666;">${formatarData(d.data)} | NF: ${d.nf}</p>
+                                    <p style="font-size: 10px; font-weight: bold; color: #1a5f7a;">R$ ${d.valor.toFixed(2)}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                comprovantesHtml = `<p style="color: #999; margin-top: 20px;">Nenhum comprovante anexado.</p>`;
             }
             
-            // Footer
-            yPos = pageHeight - 10;
-            pdf.setFontSize(8);
-            pdf.setFont('helvetica', 'italic');
-            pdf.setTextColor(100, 100, 100);
-            pdf.text('Proibida a reprodução total ou parcial deste sem autorização do Grupo SW', pageWidth / 2, yPos, { align: 'center' });
+            reportDiv.innerHTML = `
+                <div style="max-width: 750px; margin: 0 auto;">
+                    <h1 style="color: #1a5f7a; border-bottom: 3px solid #1a5f7a; padding-bottom: 10px; text-align: center;">SGSST - RELATÓRIO DE DESPESAS DE VIAGEM</h1>
+                    
+                    <div style="background: #f7fafc; padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <div><strong>Código:</strong> SGSST-FIN-FR02_00</div>
+                        <div><strong>Funcionário:</strong> ${escapeHtml(funcionario)}</div>
+                        <div><strong>Departamento:</strong> ${escapeHtml(departamento || '-')}</div>
+                        <div><strong>Destino:</strong> ${escapeHtml(destino || '-')}</div>
+                        <div><strong>Data da Viagem:</strong> ${dataViagem ? formatarData(dataViagem) : '-'}</div>
+                        <div><strong>Data do Relatório:</strong> ${new Date().toLocaleDateString('pt-BR')}</div>
+                    </div>
+                    
+                    <h3 style="color: #1a5f7a;">📋 LISTA DE DESPESAS</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                        <thead>
+                            <tr style="background: #1a5f7a; color: white;">
+                                <th style="padding: 8px; text-align: left;">Data</th>
+                                <th style="padding: 8px; text-align: left;">NF</th>
+                                <th style="padding: 8px; text-align: left;">Discriminação</th>
+                                <th style="padding: 8px; text-align: left;">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${despesas.map(d => `
+                                <tr style="border-bottom: 1px solid #e2e8f0;">
+                                    <td style="padding: 8px;">${formatarData(d.data)}</td>
+                                    <td style="padding: 8px;">${d.nf}</td>
+                                    <td style="padding: 8px;">${escapeHtml(d.discriminacao)}</td>
+                                    <td style="padding: 8px;">R$ ${d.valor.toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <div style="text-align: right; margin-top: 20px; padding-top: 10px; border-top: 2px solid #e2e8f0;">
+                        <p><strong>TOTAL DOS GASTOS:</strong> R$ ${total.toFixed(2)}</p>
+                        <p><strong>VALOR RECEBIDO COMO ADIANTAMENTO:</strong> R$ ${adiantamento.toFixed(2)}</p>
+                        <p><strong>${diferenca >= 0 ? 'VALOR A RESTITUIR' : 'VALOR A RECEBER'}:</strong> R$ ${Math.abs(diferenca).toFixed(2)}</p>
+                    </div>
+                    
+                    ${comprovantesHtml}
+                    
+                    <div style="margin-top: 40px; text-align: center; font-size: 10px; color: #a0aec0;">
+                        Proibida a reprodução total ou parcial deste sem autorização do Grupo SW
+                    </div>
+                </div>
+            `;
             
-            // Salvar PDF
-            const nomeArquivo = `Relatorio_${funcionario.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
-            pdf.save(nomeArquivo);
+            document.body.appendChild(reportDiv);
             
-            alert(`✅ PDF OTIMIZADO gerado com sucesso!\n\n📄 Relatório de ${funcionario}\n📸 ${despesasComFoto.length} comprovante(s) anexado(s)\n💾 Tamanho reduzido!`);
+            try {
+                // Aguardar imagens carregarem
+                const images = reportDiv.querySelectorAll('img');
+                await Promise.all(Array.from(images).map(img => {
+                    if (img.complete) return Promise.resolve();
+                    return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+                }));
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Capturar com html2canvas em escala menor para reduzir tamanho
+                const canvas = await html2canvas(reportDiv, { 
+                    scale: 1.5,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: false
+                });
+                
+                const imgData = canvas.toDataURL('image/jpeg', 0.7); // JPEG com compressão
+                const pdf = new jsPDF({
+                    unit: 'mm',
+                    format: 'a4',
+                    orientation: 'portrait',
+                    compress: true
+                });
+                
+                const imgWidth = 190;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let position = 0;
+                const pageHeight = 277;
+                
+                pdf.addImage(imgData, 'JPEG', 10, position + 10, imgWidth, imgHeight);
+                
+                let heightLeft = imgHeight - pageHeight + 20;
+                while (heightLeft > 0) {
+                    position = position - pageHeight + 20;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 10, position + 10, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                const nomeArquivo = `Relatorio_${funcionario.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+                pdf.save(nomeArquivo);
+                
+                alert(`✅ PDF gerado com sucesso!\n\n📄 Relatório de ${funcionario}\n📸 ${despesasComFoto.length} comprovante(s) anexado(s)`);
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao gerar PDF. Tente novamente.');
+            }
+            
+            document.body.removeChild(reportDiv);
         }
 
         async function exportarExcelModificado() {
