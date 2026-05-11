@@ -78,6 +78,16 @@
             font-size: 12px;
             color: #0050b3;
         }
+        .processando {
+            background: #fff7e6;
+            border-left: 4px solid #faad14;
+            color: #ad6800;
+        }
+        .sucesso {
+            background: #f6ffed;
+            border-left: 4px solid #52c41a;
+            color: #237804;
+        }
         @media (max-width: 768px) {
             body { padding: 10px; }
             .form-despesa { grid-template-columns: 1fr; }
@@ -220,11 +230,10 @@
         <div class="header">
             <h1>📋 SGSST - RELATÓRIO DE DESPESAS DE VIAGEM</h1>
             <div class="aviso-salvar">
-                ✅ <strong>COMPRESSÃO DE IMAGENS ATIVADA</strong> - Fotos são redimensionadas para ~100KB (economiza 95% de espaço!)
+                ✅ <strong>COMPRESSÃO DE IMAGENS ATIVADA</strong> - Fotos são redimensionadas para ~100KB
             </div>
             <div class="compress-info" id="compressInfo">
-                📸 <strong>Como funciona:</strong> Fotos são automaticamente redimensionadas para 800px de largura e comprimidas para ~100KB.
-                Isso mantém a qualidade para o PDF e economiza espaço no seu dispositivo!
+                📸 Clique na área da foto para tirar ou selecionar uma imagem
             </div>
             <div class="info-grid">
                 <div class="info-item"><label>FUNCIONÁRIO *</label><input type="text" id="funcionario" placeholder="Digite o nome do funcionário"></div>
@@ -244,11 +253,12 @@
                 <div class="form-group"><label>VALOR (R$) *</label><input type="number" step="0.01" id="valorDespesa" placeholder="0,00"></div>
                 <div class="form-group">
                     <label>COMPROVANTE (FOTO)</label>
-                    <div class="foto-area" onclick="document.getElementById('fotoInput').click()">
+                    <div class="foto-area" id="fotoArea" onclick="document.getElementById('fotoInput').click()">
                         📸 Clique para tirar foto ou enviar
-                        <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none" onchange="comprimirEAnexarFoto(this)">
+                        <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none">
                         <img id="fotoPreview" class="foto-preview" style="display:none">
                     </div>
+                    <div id="progressoFoto" style="font-size: 11px; color: #666; margin-top: 5px; display: none;"></div>
                 </div>
                 <div class="form-group"><button class="btn" onclick="adicionarDespesa()">➕ Adicionar Despesa</button></div>
             </div>
@@ -289,100 +299,165 @@
         let fotoTemp = null;
         let chart = null;
         let editandoIndex = null;
+        let processandoFoto = false;
 
-        // FUNÇÃO DE COMPRESSÃO DE IMAGEM - CORRIGIDA
-        function comprimirImagem(dataUrl, maxWidth = 800, qualidade = 0.7) {
+        // Função para calcular tamanho aproximado da string base64
+        function getBase64Size(base64) {
+            if (!base64) return 0;
+            let padding = 0;
+            if (base64.endsWith('==')) padding = 2;
+            else if (base64.endsWith('=')) padding = 1;
+            return Math.round((base64.length * 0.75) - padding);
+        }
+
+        // FUNÇÃO DE COMPRESSÃO DE IMAGEM - CORRIGIDA E TESTADA
+        async function comprimirImagem(file) {
             return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => {
-                    // Calcular novas dimensões mantendo proporção
-                    let width = img.width;
-                    let height = img.height;
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const img = new Image();
                     
-                    if (width > maxWidth) {
-                        height = (height * maxWidth) / width;
-                        width = maxWidth;
-                    }
+                    img.onload = function() {
+                        // Calcular novas dimensões (máximo 800px de largura ou altura)
+                        let width = img.width;
+                        let height = img.height;
+                        const maxDim = 800;
+                        
+                        if (width > height && width > maxDim) {
+                            height = (height * maxDim) / width;
+                            width = maxDim;
+                        } else if (height > maxDim) {
+                            width = (width * maxDim) / height;
+                            height = maxDim;
+                        }
+                        
+                        // Criar canvas
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // Comprimir como JPEG com qualidade 0.8 (boa qualidade)
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                        
+                        const tamanhoOriginal = getBase64Size(e.target.result);
+                        const tamanhoCompressed = getBase64Size(compressedDataUrl);
+                        
+                        resolve({
+                            dataUrl: compressedDataUrl,
+                            tamanhoOriginal: tamanhoOriginal,
+                            tamanhoCompressed: tamanhoCompressed,
+                            width: width,
+                            height: height
+                        });
+                    };
                     
-                    // Criar canvas para redimensionar
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
+                    img.onerror = function() {
+                        reject(new Error('Erro ao carregar a imagem'));
+                    };
                     
-                    // Converter para JPEG com compressão
-                    const imagemComprimida = canvas.toDataURL('image/jpeg', qualidade);
-                    
-                    // Calcular tamanho aproximado
-                    const tamanhoOriginal = Math.round(dataUrl.length * 0.75 / 1024);
-                    const tamanhoComprimido = Math.round(imagemComprimida.length * 0.75 / 1024);
-                    const economia = Math.round((1 - tamanhoComprimido/tamanhoOriginal) * 100);
-                    
-                    // Mostrar informação de compressão
-                    const compressInfo = document.getElementById('compressInfo');
-                    if (compressInfo) {
-                        compressInfo.innerHTML = `📸 <strong>Compressão aplicada!</strong> Foto reduzida de ${tamanhoOriginal}KB para ${tamanhoComprimido}KB (${economia}% menor)`;
-                        setTimeout(() => {
-                            compressInfo.innerHTML = `📸 <strong>Como funciona:</strong> Fotos são automaticamente redimensionadas para 800px de largura e comprimidas para ~100KB.`;
-                        }, 4000);
-                    }
-                    
-                    console.log(`📸 Compressão: ${tamanhoOriginal}KB -> ${tamanhoComprimido}KB (${economia}% menor)`);
-                    
-                    resolve(imagemComprimida);
+                    img.src = e.target.result;
                 };
-                img.onerror = () => reject(new Error('Erro ao carregar imagem'));
-                img.src = dataUrl;
+                
+                reader.onerror = function() {
+                    reject(new Error('Erro ao ler o arquivo'));
+                };
+                
+                reader.readAsDataURL(file);
             });
         }
 
-        // Função para comprimir e anexar foto
-        async function comprimirEAnexarFoto(input) {
-            if (!input.files || !input.files[0]) return;
-            
+        // Evento para selecionar foto
+        async function selecionarFoto() {
+            const input = document.getElementById('fotoInput');
             const file = input.files[0];
-            const reader = new FileReader();
             
-            // Mostrar loading
+            if (!file) return;
+            
+            // Verificar se é imagem
+            if (!file.type.startsWith('image/')) {
+                alert('❌ Por favor, selecione um arquivo de imagem válido.');
+                input.value = '';
+                return;
+            }
+            
+            // Verificar tamanho máximo (antes da compressão)
+            const tamanhoMB = file.size / 1024 / 1024;
+            if (tamanhoMB > 50) {
+                alert('❌ Imagem muito grande (máximo 50MB).');
+                input.value = '';
+                return;
+            }
+            
+            // Atualizar UI
+            const infoDiv = document.getElementById('compressInfo');
+            const progressoDiv = document.getElementById('progressoFoto');
             const preview = document.getElementById('fotoPreview');
+            
+            infoDiv.className = 'compress-info processando';
+            infoDiv.innerHTML = '⏳ Processando imagem... comprimindo...';
+            progressoDiv.style.display = 'block';
+            progressoDiv.innerHTML = '⏳ Lendo arquivo...';
             preview.style.display = 'block';
             preview.style.opacity = '0.5';
-            preview.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Crect width="100" height="100" fill="%23eee"/%3E%3Ctext x="50" y="55" text-anchor="middle" fill="%23999" font-size="12"%3EProcessando...%3C/text%3E%3C/svg%3E';
             
-            reader.onload = async function(e) {
-                const imagemOriginal = e.target.result;
+            try {
+                progressoDiv.innerHTML = '🔄 Comprimindo imagem...';
                 
-                try {
-                    // Comprimir imagem
-                    const imagemComprimida = await comprimirImagem(imagemOriginal, 800, 0.7);
-                    fotoTemp = imagemComprimida;
-                    
-                    // Mostrar preview da imagem comprimida
-                    preview.src = imagemComprimida;
-                    preview.style.opacity = '1';
-                    
-                } catch (error) {
-                    console.error('Erro ao comprimir imagem:', error);
-                    // Se falhar, usa a original
-                    fotoTemp = imagemOriginal;
-                    preview.src = imagemOriginal;
-                    preview.style.opacity = '1';
-                    alert('Erro ao comprimir imagem, usando imagem original.');
-                }
-            };
-            reader.readAsDataURL(file);
+                const resultado = await comprimirImagem(file);
+                
+                fotoTemp = resultado.dataUrl;
+                
+                // Atualizar preview
+                preview.src = resultado.dataUrl;
+                preview.style.opacity = '1';
+                
+                // Mostrar informações de compressão
+                const economia = Math.round((1 - resultado.tamanhoCompressed / resultado.tamanhoOriginal) * 100);
+                const originalKB = Math.round(resultado.tamanhoOriginal / 1024);
+                const compressedKB = Math.round(resultado.tamanhoCompressed / 1024);
+                
+                infoDiv.className = 'compress-info sucesso';
+                infoDiv.innerHTML = `✅ Foto comprimida! ${originalKB}KB → ${compressedKB}KB (${economia}% menor) | ${resultado.width}x${resultado.height}px`;
+                progressoDiv.innerHTML = `📸 Foto pronta: ${compressedKB}KB (economia de ${economia}%)`;
+                
+                setTimeout(() => {
+                    infoDiv.className = 'compress-info';
+                    infoDiv.innerHTML = '📸 Foto selecionada com sucesso! Continue preenchendo os dados.';
+                }, 4000);
+                
+                console.log(`Compressão: ${originalKB}KB -> ${compressedKB}KB (${economia}% menor)`);
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                infoDiv.className = 'compress-info';
+                infoDiv.innerHTML = '❌ Erro ao processar imagem. Tente novamente.';
+                progressoDiv.innerHTML = '';
+                preview.style.display = 'none';
+                fotoTemp = null;
+                alert('Erro ao processar a imagem. Tente novamente.');
+            } finally {
+                setTimeout(() => {
+                    progressoDiv.style.display = 'none';
+                }, 3000);
+                input.value = ''; // Limpar input para permitir selecionar mesma foto novamente
+            }
         }
 
+        // Configurar evento
+        document.getElementById('fotoInput').addEventListener('change', selecionarFoto);
+
         function carregarDados() {
-            const salvo = localStorage.getItem('despesas_viagem_sgsst_v2');
+            const salvo = localStorage.getItem('despesas_viagem_sgsst_v3');
             if (salvo) {
                 despesas = JSON.parse(salvo);
             } else {
                 despesas = [];
             }
             
-            const dadosUsuario = localStorage.getItem('dados_usuario_sgsst_v2');
+            const dadosUsuario = localStorage.getItem('dados_usuario_sgsst_v3');
             if (dadosUsuario) {
                 const user = JSON.parse(dadosUsuario);
                 if (user.funcionario) document.getElementById('funcionario').value = user.funcionario;
@@ -404,11 +479,11 @@
                 dataViagem: document.getElementById('dataViagem').value,
                 adiantamento: document.getElementById('adiantamento').value
             };
-            localStorage.setItem('dados_usuario_sgsst_v2', JSON.stringify(dadosUsuario));
+            localStorage.setItem('dados_usuario_sgsst_v3', JSON.stringify(dadosUsuario));
         }
 
         function salvarDados() {
-            localStorage.setItem('despesas_viagem_sgsst_v2', JSON.stringify(despesas));
+            localStorage.setItem('despesas_viagem_sgsst_v3', JSON.stringify(despesas));
         }
 
         function adicionarDespesa() {
@@ -427,7 +502,7 @@
                 nf, 
                 discriminacao, 
                 valor, 
-                foto: fotoTemp  // fotoTemp já está comprimida!
+                foto: fotoTemp
             };
             
             if (editandoIndex !== null) {
@@ -442,16 +517,14 @@
             atualizarTabela();
             atualizarResumo();
             
-            // Mostrar mensagem de confirmação com tamanho da foto
+            const infoDiv = document.getElementById('compressInfo');
             if (fotoTemp) {
-                const tamanhoKB = Math.round(fotoTemp.length * 0.75 / 1024);
-                const infoDiv = document.getElementById('compressInfo');
-                if (infoDiv) {
-                    infoDiv.innerHTML = `✅ Despesa adicionada! Foto comprimida para ${tamanhoKB}KB.`;
-                    setTimeout(() => {
-                        infoDiv.innerHTML = `📸 <strong>Como funciona:</strong> Fotos são automaticamente redimensionadas para 800px de largura e comprimidas para ~100KB.`;
-                    }, 3000);
-                }
+                infoDiv.className = 'compress-info sucesso';
+                infoDiv.innerHTML = '✅ Despesa adicionada com foto comprimida!';
+                setTimeout(() => {
+                    infoDiv.className = 'compress-info';
+                    infoDiv.innerHTML = '📸 Clique na área da foto para tirar ou selecionar uma imagem';
+                }, 3000);
             }
         }
 
@@ -505,7 +578,7 @@
             const tbody = document.getElementById('listaDespesas');
             tbody.innerHTML = '';
             if (lista.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="mensagem-vazia">📭 Nenhuma despesa cadastrada.<br>Clique em "Adicionar Despesa" para começar.基线<tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="mensagem-vazia">📭 Nenhuma despesa cadastrada.<br>Clique em "Adicionar Despesa" para começar.基线</tr>';
                 return;
             }
             lista.forEach((despesa, idx) => {
@@ -593,7 +666,7 @@
             
             if (despesasComFoto.length > 0) {
                 comprovantesHtml = `
-                    <h3>📸 COMPROVANTES ANEXADOS</h3>
+                    <h3>📸 COMPROVANTES ANEXADOS (${despesasComFoto.length})</h3>
                     <div class="comprovantes-grid">
                         ${despesasComFoto.map(d => `
                             <div class="comprovante-item">
